@@ -11,26 +11,38 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import { ArrowDownUp } from "lucide-react";
-import { TokenSelector } from "./TokenSelector";
 import { useWalletContext } from "@/contexts/WalletContext";
 import { useTokens } from "@/hooks/useTokens";
+import PairSelector from "./PairSelector";
+import { TokenPair } from "@/types/dex";
 
 function SwapInterface() {
   const wallet = useWalletContext();
   const tokensContext = useTokens();
 
-  const [swapFrom, setSwapFrom] = React.useState<string>("WETH");
+  const [pair, setPair] = React.useState<TokenPair | undefined>(undefined);
+  const [selectedPair, setSelectedPair] = React.useState<string | undefined>(
+    undefined
+  );
+  const [reversePair, setReversePair] = React.useState<boolean>(false);
   const [swapFromAmount, setSwapFromAmount] = React.useState<string>("1.0");
-  const [swapTo, setSwapTo] = React.useState<string>("DAI");
   const [swapToAmount, setSwapToAmount] = React.useState<string>("3.4");
 
+  useEffect(() => {
+    if (!selectedPair) return setPair(undefined);
+    const foundPair = tokensContext.pairs.find(
+      (p) => p.address === selectedPair
+    );
+
+    if (!foundPair) return setPair(undefined);
+    setPair(foundPair);
+  }, [tokensContext.pairs, selectedPair]);
+
   const handleTokenFlip = () => {
-    const tempSwapTo = swapTo;
-    const tempSwapToAmount = swapToAmount;
-    setSwapTo(swapFrom);
-    setSwapToAmount(swapFromAmount);
-    setSwapFrom(tempSwapTo);
-    setSwapFromAmount(tempSwapToAmount);
+    setReversePair((prev) => !prev);
+    const temp = swapFromAmount;
+    setSwapFromAmount(swapToAmount);
+    setSwapToAmount(temp);
   };
 
   return (
@@ -40,10 +52,15 @@ function SwapInterface() {
         <CardDescription>Trade tokens easily</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
+        <PairSelector
+          selectedPair={selectedPair}
+          setSelectedPair={setSelectedPair}
+        />
+
         {/* From */}
         <div>
-          <Label htmlFor="swap-from" className="mb-1">
-            From:
+          <Label htmlFor="swap-from" className="my-1">
+            {`From: ${(pair && (reversePair ? pair.token1.symbol : pair.token0.symbol)) || ""}`}
           </Label>
           <div className="flex items-center w-full gap-1">
             <Input
@@ -51,10 +68,6 @@ function SwapInterface() {
               type="text"
               value={swapFromAmount}
               onChange={(e) => setSwapFromAmount(e.target.value)}
-            />
-            <TokenSelector
-              selectedToken={swapFrom}
-              onSelectToken={setSwapFrom}
             />
           </div>
         </div>
@@ -74,7 +87,7 @@ function SwapInterface() {
         {/* To */}
         <div>
           <Label htmlFor="swap-to" className="mb-1">
-            To:
+            {`To: ${(pair && (reversePair ? pair.token0.symbol : pair.token1.symbol)) || ""}`}
           </Label>
           <div className="flex items-center w-full gap-1">
             <Input
@@ -83,7 +96,6 @@ function SwapInterface() {
               value={swapToAmount}
               onChange={(e) => setSwapToAmount(e.target.value)}
             />
-            <TokenSelector selectedToken={swapTo} onSelectToken={setSwapTo} />
           </div>
         </div>
       </CardContent>
@@ -96,9 +108,6 @@ function SwapInterface() {
               wallet.connect();
             } else {
               // Handle swap logic here
-              console.log(
-                `Swapping ${swapFromAmount} ${swapFrom} for ${swapToAmount} ${swapTo}`
-              );
             }
           }}
         >
