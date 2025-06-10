@@ -45,8 +45,9 @@ export function useWallet() {
   useEffect(() => {
     if (!window.ethereum) return;
 
-    const handleAccountsChanged = (accounts: string[]) => {
-      setAccount(accounts[0] || null);
+    const handleAccountsChanged = async (accounts: string[]) => {
+      disconnect();
+      await connect();
     };
     const handleChainChanged = () => window.location.reload();
 
