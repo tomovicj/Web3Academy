@@ -34,7 +34,7 @@ function SwapInterface() {
   };
 
   return (
-    <Card className="max-w-xl mx-auto my-4">
+    <Card>
       <CardHeader>
         <CardTitle>SWAP</CardTitle>
         <CardDescription>Trade tokens easily</CardDescription>
