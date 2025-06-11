@@ -15,6 +15,9 @@ import { useWalletContext } from "@/contexts/WalletContext";
 import { useTokens } from "@/hooks/useTokens";
 import PairSelector from "./PairSelector";
 import { TokenPair } from "@/types/dex";
+import { ethers } from "ethers";
+import { getAmountIn, getAmountOut, handleSwap } from "@/lib/swap";
+import { getReserves } from "@/lib/liquidity";
 
 function SwapInterface() {
   const wallet = useWalletContext();
@@ -25,8 +28,8 @@ function SwapInterface() {
     undefined
   );
   const [reversePair, setReversePair] = React.useState<boolean>(false);
-  const [swapFromAmount, setSwapFromAmount] = React.useState<string>("1.0");
-  const [swapToAmount, setSwapToAmount] = React.useState<string>("3.4");
+  const [swapFromAmount, setSwapFromAmount] = React.useState<string>("0");
+  const [swapToAmount, setSwapToAmount] = React.useState<string>("0");
 
   useEffect(() => {
     if (!selectedPair) return setPair(undefined);
@@ -43,6 +46,55 @@ function SwapInterface() {
     const temp = swapFromAmount;
     setSwapFromAmount(swapToAmount);
     setSwapToAmount(temp);
+  };
+
+  const handleSwapFromChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value;
+    setSwapFromAmount(value);
+    if (value === "") {
+      setSwapFromAmount("");
+      setSwapToAmount("0");
+      return;
+    }
+    if (/^[0-9]+\.?[0-9]*$/.test(value) === false) return; // Only allow numbers and decimal points
+    if (pair) {
+      const reserves = await getReserves(pair.address);
+      const reservesSorted = reversePair
+        ? [reserves.token1, reserves.token0]
+        : [reserves.token0, reserves.token1];
+      const amountOut = getAmountOut(
+        ethers.parseEther(value),
+        ethers.parseEther(reservesSorted[0]),
+        ethers.parseEther(reservesSorted[1])
+      );
+      setSwapToAmount(ethers.formatEther(amountOut));
+    }
+  };
+
+  const hadleSwapToChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === "") {
+      setSwapToAmount("");
+      setSwapFromAmount("0");
+      return;
+    }
+    if (/^[0-9]+\.?[0-9]*$/.test(value) === false) return; // Only allow numbers and decimal points
+
+    setSwapToAmount(value);
+    if (pair) {
+      const reserves = await getReserves(pair.address);
+      const reservesSorted = reversePair
+        ? [reserves.token1, reserves.token0]
+        : [reserves.token0, reserves.token1];
+      const amountIn = getAmountIn(
+        ethers.parseEther(value),
+        ethers.parseEther(reservesSorted[0]),
+        ethers.parseEther(reservesSorted[1])
+      );
+      setSwapFromAmount(ethers.formatEther(amountIn));
+    }
   };
 
   return (
@@ -67,7 +119,8 @@ function SwapInterface() {
               id="swap-from"
               type="text"
               value={swapFromAmount}
-              onChange={(e) => setSwapFromAmount(e.target.value)}
+              disabled={!pair}
+              onChange={handleSwapFromChange}
             />
           </div>
         </div>
@@ -93,8 +146,9 @@ function SwapInterface() {
             <Input
               id="swap-to"
               type="text"
+              disabled={!pair}
               value={swapToAmount}
-              onChange={(e) => setSwapToAmount(e.target.value)}
+              onChange={hadleSwapToChange}
             />
           </div>
         </div>
@@ -107,7 +161,14 @@ function SwapInterface() {
             if (!wallet.account) {
               wallet.connect();
             } else {
-              // Handle swap logic here
+              if (!pair || !wallet.signer) return;
+              handleSwap(
+                pair?.address,
+                reversePair ? pair?.token1.address : pair?.token0.address,
+                ethers.parseEther(swapFromAmount),
+                ethers.parseEther(swapToAmount),
+                wallet.signer
+              );
             }
           }}
         >
