@@ -2,7 +2,7 @@ import React, { createContext, useContext, ReactNode } from "react";
 import { useWallet } from "../hooks/useWallet";
 import { ethers } from "ethers";
 
-interface WalletContextType {
+export interface WalletContextType {
   account: string | null;
   provider: ethers.BrowserProvider | null;
   signer: ethers.JsonRpcSigner | null;

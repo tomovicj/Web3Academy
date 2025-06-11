@@ -5,9 +5,13 @@ import { TokenPair } from "@/types/dex";
 import { ethers } from "ethers";
 
 export type LiquidityReserves = {
-    token0: string;
-    token1: string;
-}
+  token0: string;
+  token1: string;
+};
+
+const PROVIDER = new ethers.BrowserProvider(
+  window.ethereum as ethers.Eip1193Provider
+);
 
 export async function addLiquidity(
   pair: TokenPair,
@@ -48,21 +52,45 @@ export function removeLiquidity(
   signer: ethers.Signer
 ): Promise<void> {
   const pairContract = new ethers.Contract(pairAddress, EzSwapPair.abi, signer);
-  return pairContract.removeLiquidity(ethers.parseEther(liquidity));
+  return pairContract.removeLiquidity(ethers.parseEther(liquidity), {
+    gasLimit: 500000,
+  });
 }
 
-export async function getLiquidity(
-  pairAddress: string,
-  provider: ethers.Provider
+export async function getReserves(
+  pairAddress: string
 ): Promise<LiquidityReserves> {
   const pairContract = new ethers.Contract(
     pairAddress,
     EzSwapPair.abi,
-    provider
+    PROVIDER
   );
   const liquidity = await pairContract.getReserves.staticCall();
   return {
     token0: ethers.formatEther(liquidity[0]),
     token1: ethers.formatEther(liquidity[1]),
   };
+}
+
+export async function getLiquidity(pairAddress: string): Promise<string> {
+  const pairContract = new ethers.Contract(
+    pairAddress,
+    EzSwapPair.abi,
+    PROVIDER
+  );
+  const liquidity = await pairContract.totalSupply.staticCall();
+  return ethers.formatEther(liquidity);
+}
+
+export async function getLiquidityForAddress(
+  pairAddress: string,
+  userAddress: string
+): Promise<string> {
+  const pairContract = new ethers.Contract(
+    pairAddress,
+    EzSwapPair.abi,
+    PROVIDER
+  );
+  const liquidity = await pairContract.balanceOf.staticCall(userAddress);
+  return ethers.formatEther(liquidity);
 }
