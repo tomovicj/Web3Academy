@@ -16,4 +16,5 @@ export interface TokensContextType {
   tokens: Record<string, Token>;
   loading: boolean;
   error: string | null;
+  reloadData: () => Promise<void>;
 }

@@ -118,7 +118,7 @@ export const TokensProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   return (
-    <TokensContext.Provider value={{ pairs, tokens, loading, error }}>
+    <TokensContext.Provider value={{ pairs, tokens, loading, error, reloadData: loadData }}>
       {children}
     </TokensContext.Provider>
   );

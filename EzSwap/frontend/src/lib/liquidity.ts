@@ -1,8 +1,11 @@
+import EzSwapFactory from "@/ABI/EzSwapFactory.json";
 import EzSwapPair from "@/ABI/EzSwapPair.json";
 import MockERC20 from "@/ABI/MockERC20.json";
 
 import { TokenPair } from "@/types/dex";
 import { ethers } from "ethers";
+
+const FACTORY_ADDRESS = import.meta.env.VITE_FACTORY_ADDRESS as string;
 
 export type LiquidityReserves = {
   token0: string;
@@ -93,4 +96,20 @@ export async function getLiquidityForAddress(
   );
   const liquidity = await pairContract.balanceOf.staticCall(userAddress);
   return ethers.formatEther(liquidity);
+}
+
+export async function createNewPair(
+  token0Address: string,
+  token1Address: string,
+  signer: ethers.Signer
+): Promise<string> {
+  console.log(FACTORY_ADDRESS, token0Address, token1Address);
+  const factoryContract = new ethers.Contract(
+    FACTORY_ADDRESS,
+    EzSwapFactory.abi,
+    signer
+  );
+  return factoryContract.createPair(token0Address, token1Address, {
+    gasLimit: 10000000,
+  });
 }

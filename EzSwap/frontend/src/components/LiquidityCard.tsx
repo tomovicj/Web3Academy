@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardFooter,
@@ -15,6 +16,7 @@ import { useWalletContext } from "@/contexts/WalletContext";
 import { addLiquidity, removeLiquidity } from "@/lib/liquidity";
 import AddingLiquidity from "./AddingLiquidity";
 import RemovingLiquidity from "./RemovingLiquidity";
+import NewTokenPair from "./NewTokenPair";
 
 function LiquidityCard() {
   const wallet = useWalletContext();
@@ -67,6 +69,9 @@ function LiquidityCard() {
       <CardHeader>
         <CardTitle>LIQUIDITY</CardTitle>
         <CardDescription>{`${isAdding ? "ADD" : "REMOVE"} liquidity`}</CardDescription>
+        <CardAction>
+          <NewTokenPair signer={wallet.signer} />
+        </CardAction>
       </CardHeader>
       <CardContent>
         <PairSelector
