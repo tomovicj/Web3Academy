@@ -1,13 +1,49 @@
-# Sample Hardhat Project
+## How to run
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a Hardhat Ignition module that deploys that contract.
+### Manual
+ 
+ 1. Install npm modules
+```bash
+npm install
+```
 
-Try running some of the following tasks:
+2. Compile contracts
+```bash
+npx hardhat compile
+```
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
+3. Start local hardhat node
+```bash
 npx hardhat node
-npx hardhat ignition deploy ./ignition/modules/Lock.ts
+```
+
+4. Run deployment script. (Factory and 3 mock tokens)
+> [!IMPORTANT] 
+> Make sure the hardhat network from previous step is still running.
+
+> [!IMPORTANT] 
+> Copy addresses of deployed contracts to frontend's `.env` file.
+
+```bash
+npx hardhat ignition deploy ./ignition/modules/EzSwapDev.ts --network localhost
+```
+
+### Docker
+1. Build an image
+```bash
+docker build -t ezswap-hardhat .
+```
+
+2. Run the container
+```bash
+docker run -it -p 8545:8545 ezswap-hardhat
+```
+
+3. Run deployment script. (Factory and 3 mock tokens)
+> [!IMPORTANT] 
+> Copy addresses of deployed contracts to frontend's `.env` file.
+> Do this before building a frontend image
+
+```bash
+sudo docker run --network host -it ezswap-hardhat npx hardhat ignition deploy ./ignition/modules/EzSwapDev.ts --network localhost
 ```
