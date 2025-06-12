@@ -22,8 +22,9 @@ function ClaimTokensAlert() {
 
     const token1Address = import.meta.env.VITE_TOKEN1_ADDRESS;
     const token2Address = import.meta.env.VITE_TOKEN2_ADDRESS;
+    const token3Address = import.meta.env.VITE_TOKEN3_ADDRESS;
 
-    if (!token1Address || !token2Address) {
+    if (!token1Address || !token2Address || !token3Address) {
       console.error("Token addresses are not set in environment variables");
       return;
     }
@@ -38,12 +39,21 @@ function ClaimTokensAlert() {
       MockERC20.abi,
       wallet.signer
     );
+    const token3Contract = new ethers.Contract(
+      token3Address,
+      MockERC20.abi,
+      wallet.signer
+    );
 
-    const tx1 = await token1Contract.mint(
+    await token1Contract.mint(
       wallet.account,
       ethers.parseEther("1000")
     );
-    const tx2 = await token2Contract.mint(
+    await token2Contract.mint(
+      wallet.account,
+      ethers.parseEther("1000")
+    );
+    await token3Contract.mint(
       wallet.account,
       ethers.parseEther("1000")
     );
@@ -56,10 +66,9 @@ function ClaimTokensAlert() {
   return (
     <Alert variant="default" className="max-w-xl mx-auto my-4">
       <AlertCircleIcon />
-      <AlertTitle>Looks like you don't have any TEST tokens</AlertTitle>
+      <AlertTitle>You can claim TEST tokens to test the swap functionality</AlertTitle>
       <AlertDescription>
-        You can claim TEST tokens to test the swap functionality.
-        <Button onClick={claimTokens}>Claim tokens</Button>
+        <Button onClick={claimTokens} className="w-full">Claim tokens</Button>
       </AlertDescription>
     </Alert>
   );
